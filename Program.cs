@@ -1,0 +1,108 @@
+using System.Globalization;
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using Northwind.App.Backend.Models;
+using Serilog;
+
+// Configure Serilog bootstrap logger for startup errors
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateBootstrapLogger();
+
+try
+{
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+    Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Use Serilog as the logging provider - reads configuration from appsettings.json
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
+
+    // Entity Framework - SQLite database (read-only in container)
+    builder.Services.AddDbContext<NorthwindContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("NorthwindDb")));
+
+    // Health checks
+    builder.Services.AddHealthChecks();
+
+    // Problem Details for consistent error responses (RFC 7807)
+    builder.Services.AddProblemDetails();
+
+    // Response compression for better performance
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+    });
+
+    // Add CORS policy to allow all origins
+    builder.Services.AddCors(options =>
+    {
+        options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+                });
+    });
+
+    // Add Swagger/OpenAPI
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.EnableAnnotations();
+        c.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Northwind.App.Backend",
+            Version = "v1",
+            Description = "Northwind.App.Backend API",
+            Contact = new OpenApiContact
+            {
+                Name = "Repository",
+                Url = new Uri("https://github.com/devcronberg/Northwind.App.Backend")
+            }
+        });
+    });
+
+    var app = builder.Build();
+
+    // Global exception handling - returns Problem Details
+    app.UseExceptionHandler();
+    app.UseStatusCodePages();
+
+    // Response compression
+    app.UseResponseCompression();
+
+    // Serilog request logging - logs all HTTP requests
+    app.UseSerilogRequestLogging();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseRouting();
+    app.UseCors();
+    app.MapControllers();
+
+    // Health check endpoints
+    app.MapHealthChecks("/health");
+
+    Log.Information("Northwind.App.Backend starting...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application failed to start");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
