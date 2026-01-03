@@ -19,8 +19,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Create a non-root user for security
-RUN addgroup --group appuser --gid 1000 && \
-    adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser && \
+RUN groupadd -g 1000 appuser && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash appuser && \
     chown -R appuser:appuser /app
 
 # Copy published app from publish stage
