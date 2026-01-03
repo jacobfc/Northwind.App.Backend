@@ -132,6 +132,9 @@ try
     // Health check endpoints
     app.MapHealthChecks("/health");
 
+    // Redirect root to Swagger UI for demo purposes
+    app.MapGet("/", () => Results.Redirect("/swagger", permanent: false));
+
     Log.Information("Northwind.App.Backend starting...");
     app.Run();
 }
