@@ -45,27 +45,27 @@ The API is deployed and accessible at:
 
 ### System Endpoints
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/` | GET | Redirects to Swagger UI | No |
-| `/health` | GET | Basic health check | No |
-| `/health/live` | GET/HEAD | Liveness probe | No |
-| `/health/ready` | GET/HEAD | Readiness probe | No |
-| `/version` | GET | API version | No |
-| `/config` | GET | Runtime configuration | No |
-| `/test` | GET | Echo test endpoint | No |
-| `/test/error` | GET | Test error handling | No |
-| `/swagger` | GET | API documentation | No |
+| Endpoint        | Method   | Description             | Auth Required |
+| --------------- | -------- | ----------------------- | ------------- |
+| `/`             | GET      | Redirects to Swagger UI | No            |
+| `/health`       | GET      | Basic health check      | No            |
+| `/health/live`  | GET/HEAD | Liveness probe          | No            |
+| `/health/ready` | GET/HEAD | Readiness probe         | No            |
+| `/version`      | GET      | API version             | No            |
+| `/config`       | GET      | Runtime configuration   | No            |
+| `/test`         | GET      | Echo test endpoint      | No            |
+| `/test/error`   | GET      | Test error handling     | No            |
+| `/swagger`      | GET      | API documentation       | No            |
 
 ### Authentication Endpoints
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/api/auth/login` | POST | Login with credentials | No |
-| `/api/auth/refresh` | POST | Refresh access token | No |
-| `/api/auth/logout` | POST | Logout current session | Yes |
-| `/api/auth/logout-all` | POST | Logout all sessions | Yes |
-| `/api/auth/me` | GET | Get current user info | Yes |
+| Endpoint               | Method | Description            | Auth Required |
+| ---------------------- | ------ | ---------------------- | ------------- |
+| `/api/auth/login`      | POST   | Login with credentials | No            |
+| `/api/auth/refresh`    | POST   | Refresh access token   | No            |
+| `/api/auth/logout`     | POST   | Logout current session | Yes           |
+| `/api/auth/logout-all` | POST   | Logout all sessions    | Yes           |
+| `/api/auth/me`         | GET    | Get current user info  | Yes           |
 
 **Demo Credentials:**
 ```json
@@ -84,20 +84,22 @@ or
 
 ### Public Customer Endpoints (No Authentication)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/public/customers` | GET | Get all customers |
-| `/api/public/customers/{id}` | GET | Get customer by ID |
-| `/api/public/customers/{id}/orders` | GET | Get customer with orders |
-| `/api/public/customers` | POST | Create new customer |
-| `/api/public/customers/{id}` | PUT | Update customer |
-| `/api/public/customers/{id}` | DELETE | Delete customer |
+| Endpoint                                 | Method | Description                                              | Query Parameters                              |
+| ---------------------------------------- | ------ | -------------------------------------------------------- | --------------------------------------------- |
+| `/api/public/customers`                  | GET    | Get all customers (paginated)                            | `skip` (default: 0), `take` (default: 1000)   |
+| `/api/public/customers-with-orders`      | GET    | Get all customers with orders (sorted by revenue)        | `skip` (0), `take` (1000), `maxOrdersPerCustomer` (10) |
+| `/api/public/customers/{id}`             | GET    | Get customer by ID                                       | -                                             |
+| `/api/public/customers/{id}/orders`      | GET    | Get customer with orders                                 | `maxOrders` (default: 10)                     |
+| `/api/public/customers`                  | POST   | Create new customer                                      | -                                             |
+| `/api/public/customers/{id}`             | PUT    | Update customer                                          | -                                             |
+| `/api/public/customers/{id}`             | PATCH  | Partially update customer                                | -                                             |
+| `/api/public/customers/{id}`             | DELETE | Delete customer                                          | -                                             |
 
 ### Protected Customer Endpoints (Authentication Required)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/customers` | GET | Get all customers (requires JWT) |
+| Endpoint         | Method | Description                           | Query Parameters                            |
+| ---------------- | ------ | ------------------------------------- | ------------------------------------------- |
+| `/api/customers` | GET    | Get all customers (requires JWT)      | `skip` (default: 0), `take` (default: 1000) |
 
 ## 🏃 Getting Started
 
