@@ -132,8 +132,55 @@ try
     // Health check endpoints
     app.MapHealthChecks("/health");
 
-    // Redirect root to Swagger UI for demo purposes
-    app.MapGet("/", () => Results.Redirect("/swagger", permanent: false));
+    // Root endpoint - API information page
+    app.MapGet("/", () => Results.Content(
+        """
+        <!DOCTYPE html>
+        <html lang="da">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Northwind API Backend</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    max-width: 800px;
+                    margin: 50px auto;
+                    padding: 20px;
+                    background: #f5f5f5;
+                }
+                .container {
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                h1 { color: #0066cc; margin-top: 0; }
+                .info { background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .links { margin-top: 20px; }
+                .links a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 16px; background: #0078d4; color: white; text-decoration: none; border-radius: 4px; }
+                .links a:hover { background: #106ebe; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚀 Northwind API Backend</h1>
+                <p>Dette er en <strong>REST API backend</strong> applikation bygget med ASP.NET Core.</p>
+                
+                <div class="info">
+                    <p><strong>ℹ️ Information:</strong></p>
+                    <p>Dette er en demo/test API der demonstrerer moderne web API best practices inkl. JWT-autentificering, Entity Framework Core, og OpenAPI-dokumentation.</p>
+                </div>
+
+                <div class="links">
+                    <a href="/swagger">📖 API Dokumentation (Swagger)</a>
+                    <a href="/health/live">✅ Health Check</a>
+                    <a href="/version">📋 Version</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """, "text/html"));
 
     Log.Information("Northwind.App.Backend starting...");
     app.Run();
