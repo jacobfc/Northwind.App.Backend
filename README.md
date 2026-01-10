@@ -45,27 +45,27 @@ API'et er deployed og tilgængeligt på:
 
 ### System Endpoints
 
-| Endpoint        | Method   | Beskrivelse                   | Kræver Auth |
-| --------------- | -------- | ----------------------------- | ----------- |
-| `/`             | GET      | Omdirigerer til Swagger UI    | Nej         |
-| `/health`       | GET      | Basis health check            | Nej         |
-| `/health/live`  | GET/HEAD | Liveness probe                | Nej         |
-| `/health/ready` | GET/HEAD | Readiness probe               | Nej         |
-| `/version`      | GET      | API version                   | Nej         |
-| `/config`       | GET      | Runtime-konfiguration         | Nej         |
-| `/test`         | GET      | Echo test endpoint            | Nej         |
-| `/test/error`   | GET      | Test fejlhåndtering           | Nej         |
-| `/swagger`      | GET      | API-dokumentation             | Nej         |
+| Endpoint        | Method   | Beskrivelse                | Kræver Auth |
+| --------------- | -------- | -------------------------- | ----------- |
+| `/`             | GET      | Omdirigerer til Swagger UI | Nej         |
+| `/health`       | GET      | Basis health check         | Nej         |
+| `/health/live`  | GET/HEAD | Liveness probe             | Nej         |
+| `/health/ready` | GET/HEAD | Readiness probe            | Nej         |
+| `/version`      | GET      | API version                | Nej         |
+| `/config`       | GET      | Runtime-konfiguration      | Nej         |
+| `/test`         | GET      | Echo test endpoint         | Nej         |
+| `/test/error`   | GET      | Test fejlhåndtering        | Nej         |
+| `/swagger`      | GET      | API-dokumentation          | Nej         |
 
 ### Autentificerings-Endpoints
 
-| Endpoint               | Method | Beskrivelse                 | Kræver Auth |
-| ---------------------- | ------ | --------------------------- | ----------- |
-| `/api/auth/login`      | POST   | Login med credentials       | Nej         |
-| `/api/auth/refresh`    | POST   | Forny access token          | Nej         |
-| `/api/auth/logout`     | POST   | Logout aktuel session       | Ja          |
-| `/api/auth/logout-all` | POST   | Logout alle sessioner       | Ja          |
-| `/api/auth/me`         | GET    | Hent aktuel brugerinfo      | Ja          |
+| Endpoint               | Method | Beskrivelse            | Kræver Auth |
+| ---------------------- | ------ | ---------------------- | ----------- |
+| `/api/auth/login`      | POST   | Login med credentials  | Nej         |
+| `/api/auth/refresh`    | POST   | Forny access token     | Nej         |
+| `/api/auth/logout`     | POST   | Logout aktuel session  | Ja          |
+| `/api/auth/logout-all` | POST   | Logout alle sessioner  | Ja          |
+| `/api/auth/me`         | GET    | Hent aktuel brugerinfo | Ja          |
 
 **Demo Credentials:**
 ```json
@@ -84,22 +84,22 @@ or
 
 ### Offentlige Kunde-Endpoints (Ingen Autentificering)
 
-| Endpoint                             | Method | Beskrivelse                                           | Query Parameters                            |
-| ------------------------------------ | ------ | ----------------------------------------------------- | ------------------------------------------- |
-| `/api/public/customers`              | GET    | Hent alle kunder (pagineret)                          | `skip` (standard: 0), `take` (standard: 1000) |
-| `/api/public/customers-with-revenue` | GET    | Hent alle kunder med omsætningsinfo (sorteret)        | `skip` (standard: 0), `take` (standard: 1000) |
-| `/api/public/customers/{id}`         | GET    | Hent kunde efter ID                                   | -                                           |
-| `/api/public/customers/{id}/orders`  | GET    | Hent kunde med ordrer                                 | `maxOrders` (standard: 10)                  |
-| `/api/public/customers`              | POST   | Opret ny kunde                                        | -                                           |
-| `/api/public/customers/{id}`         | PUT    | Opdater kunde                                         | -                                           |
-| `/api/public/customers/{id}`         | PATCH  | Delvist opdater kunde                                 | -                                           |
-| `/api/public/customers/{id}`         | DELETE | Slet kunde                                            | -                                           |
+| Endpoint                             | Method | Beskrivelse                                    | Query Parameters                              |
+| ------------------------------------ | ------ | ---------------------------------------------- | --------------------------------------------- |
+| `/api/public/customers`              | GET    | Hent alle kunder (pagineret)                   | `skip` (standard: 0), `take` (standard: 1000) |
+| `/api/public/customers-with-revenue` | GET    | Hent alle kunder med omsætningsinfo (sorteret) | `skip` (standard: 0), `take` (standard: 1000) |
+| `/api/public/customers/{id}`         | GET    | Hent kunde efter ID                            | -                                             |
+| `/api/public/customers/{id}/orders`  | GET    | Hent kunde med ordrer                          | `maxOrders` (standard: 10)                    |
+| `/api/public/customers`              | POST   | Opret ny kunde                                 | -                                             |
+| `/api/public/customers/{id}`         | PUT    | Opdater kunde                                  | -                                             |
+| `/api/public/customers/{id}`         | PATCH  | Delvist opdater kunde                          | -                                             |
+| `/api/public/customers/{id}`         | DELETE | Slet kunde                                     | -                                             |
 
 ### Beskyttede Kunde-Endpoints (Kræver Autentificering)
 
-| Endpoint         | Method | Beskrivelse                       | Query Parameters                            |
-| ---------------- | ------ | --------------------------------- | ------------------------------------------- |
-| `/api/customers` | GET    | Hent alle kunder (kræver JWT)     | `skip` (standard: 0), `take` (standard: 1000) |
+| Endpoint         | Method | Beskrivelse                   | Query Parameters                              |
+| ---------------- | ------ | ----------------------------- | --------------------------------------------- |
+| `/api/customers` | GET    | Hent alle kunder (kræver JWT) | `skip` (standard: 0), `take` (standard: 1000) |
 
 ## 🏃 Kom i Gang
 
