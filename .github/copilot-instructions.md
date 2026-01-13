@@ -12,6 +12,7 @@ This is an ASP.NET Core REST API backend application serving as a demo/reference
 - **JWT Bearer Authentication** for secure endpoints
 - **Serilog** for structured logging
 - **Swashbuckle** for OpenAPI/Swagger documentation
+- **Meziantou.Analyzer** - Code quality analyzer enforcing best practices
 
 ## Architecture & Best Practices
 
@@ -37,6 +38,8 @@ This is an ASP.NET Core REST API backend application serving as a demo/reference
 - **Error Handling**: Let exceptions bubble up - global handler returns Problem Details
 - **Authentication**: Use `[Authorize]` attribute for protected endpoints
 - **Database**: Use `AsNoTracking()` for read-only queries
+- **Code Quality**: Build must compile with **zero warnings** - Dockerfile uses `--warnaserror` to enforce this
+- **Analyzers**: Meziantou.Analyzer is enabled with simplified warnings disabled (see `.editorconfig`)
 
 ### Project Structure
 
@@ -140,6 +143,7 @@ JWT settings are configured in `appsettings.json`:
 - **Security**: Runs as non-root user (UID/GID 1001)
 - **Port**: Configurable via `PORT` environment variable (default: 8080)
 - **Size**: Optimized with layer caching and minimal runtime image
+- **Build Quality**: Uses `--warnaserror` flag - deployment fails if any warnings exist
 
 #### Render.com Deployment
 - **Configuration**: `render.yaml` (Blueprint)
@@ -198,18 +202,20 @@ policy.AllowAnyOrigin()
 ## When Modifying This Project
 
 1. **Keep all text in English** - code, comments, logs, documentation
-2. **Add `[ProducesResponseType]` attributes** to all controller actions for Swagger
-3. **Use structured logging**: `_logger.LogInformation("Message {Parameter}", value)`
-4. **Add XML documentation comments** (`///`) to public API methods
-5. **Follow existing patterns**:
+2. **Zero warnings policy** - Code must compile without any warnings (enforced by `--warnaserror` in Dockerfile)
+3. **Add `[ProducesResponseType]` attributes** to all controller actions for Swagger
+4. **Use structured logging**: `_logger.LogInformation("Message {Parameter}", value)`
+5. **Add XML documentation comments** (`///`) to public API methods
+6. **Follow existing patterns**:
    - SystemController for system endpoints
    - AuthController for authentication
    - PublicCustomersController for public CRUD operations
    - CustomersController for authenticated endpoints
-6. **Use `AsNoTracking()`** for read-only EF queries
-7. **Use `[Authorize]`** attribute for protected endpoints
-8. **Test endpoints** in Swagger UI before committing
-9. **Update this file** when adding new features or patterns
+7. **Use `AsNoTracking()`** for read-only EF queries
+8. **Use `[Authorize]`** attribute for protected endpoints
+9. **Test endpoints** in Swagger UI before committing
+10. **Check analyzer warnings** - Fix any Meziantou.Analyzer warnings before committing
+11. **Update this file** when adding new features or patterns
 
 ## Security Considerations
 

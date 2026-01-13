@@ -38,6 +38,7 @@ API'et er deployed og tilgængeligt på:
 - **[JWT Bearer Authentication](https://jwt.io/)** - Industristandard token-autentificering
 - **[Serilog](https://serilog.net/)** - Struktureret logging-bibliotek
 - **[Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)** - OpenAPI/Swagger-værktøjer
+- **[Meziantou.Analyzer](https://www.meziantou.net/meziantou-analyzer.htm)** - Code quality analyzer
 - **[Docker](https://www.docker.com/)** - Containeriserings-platform
 - **[Render.com](https://render.com/)** - Cloud-platform til deployment
 
@@ -183,6 +184,7 @@ API'et vil være tilgængeligt på [http://localhost:8080](http://localhost:8080
 - **Base images**:
   - Build: `mcr.microsoft.com/dotnet/sdk:10.0`
   - Runtime: `mcr.microsoft.com/dotnet/aspnet:10.0`
+- **Build kvalitet** - Bruger `--warnaserror` flag, så deployment fejler hvis der er warnings
 
 ## ☁️ Deployment til Render.com
 
@@ -360,6 +362,8 @@ Dette projekt demonstrerer:
 - ✅ **CORS** - Konfigureret til cross-origin requests
 - ✅ **Docker** - Multi-stage builds, layer caching
 - ✅ **Cloud Native** - Container-klar, 12-factor app principper
+- ✅ **Code Quality** - Meziantou.Analyzer for best practices enforcement
+- ✅ **Zero Warnings** - Docker build fejler ved compiler warnings (`--warnaserror`)
 
 ## 🤝 Bidrag
 

@@ -1,0 +1,53 @@
+root = true
+
+# All files
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 4
+indent_style = space
+
+# Meziantou.Analyzer - Disable simple/common warnings
+[*.cs]
+
+# MA0001: StringComparison is missing (too noisy for simple string operations)
+dotnet_diagnostic.MA0001.severity = none
+
+# MA0002: IEqualityComparer<string> or IComparer<string> is missing (often not needed)
+dotnet_diagnostic.MA0002.severity = none
+
+# MA0004: Use Task.ConfigureAwait(false) (not needed in ASP.NET Core)
+dotnet_diagnostic.MA0004.severity = none
+
+dotnet_diagnostic.MA0006.severity = none
+
+# MA0011: IFormatProvider is missing (too noisy for logging/simple formatting)
+dotnet_diagnostic.MA0011.severity = none
+
+# MA0016: Prefer using collection abstraction instead of implementation (often too strict)
+dotnet_diagnostic.MA0016.severity = none
+
+# MA0026: Fix TODO comment (let developers manage their TODOs)
+dotnet_diagnostic.MA0026.severity = none
+
+# MA0048: File name must match type name (not always desired in ASP.NET Core)
+dotnet_diagnostic.MA0048.severity = none
+
+# MA0051: Method is too long (subjective metric)
+dotnet_diagnostic.MA0051.severity = none
+
+# MA0053: Make class sealed (too aggressive for most projects)
+dotnet_diagnostic.MA0053.severity = none
+
+# MA0056: Do not call overridable members in constructor (often false positives)
+dotnet_diagnostic.MA0056.severity = none
+
+# MA0069: Non-constant static fields should not be visible (often needed for configs)
+dotnet_diagnostic.MA0069.severity = none
+
+# MA0110: Use the Regex source generator (not always beneficial)
+dotnet_diagnostic.MA0110.severity = none

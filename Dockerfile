@@ -22,7 +22,8 @@ COPY . .
 # Build the application in Release mode
 # -c Release: optimized compilation with no debug symbols
 # -o /app/build: output directory for build artifacts
-RUN dotnet build "Northwind.App.Backend.csproj" -c Release -o /app/build
+# --warnaserror: treat all warnings as errors - build fails if warnings exist
+RUN dotnet build "Northwind.App.Backend.csproj" -c Release -o /app/build --warnaserror
 
 # ===================================================================
 # STAGE 2: Publish
@@ -35,7 +36,8 @@ FROM build AS publish
 # -o /app/publish: output directory for published files
 # /p:UseAppHost=false: don't create a native executable (use 'dotnet' command instead)
 #   This makes the container smaller and more portable
-RUN dotnet publish "Northwind.App.Backend.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# --warnaserror: treat all warnings as errors - publish fails if warnings exist
+RUN dotnet publish "Northwind.App.Backend.csproj" -c Release -o /app/publish /p:UseAppHost=false --warnaserror
 
 # ===================================================================
 # STAGE 3: Final Runtime
