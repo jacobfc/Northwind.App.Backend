@@ -49,19 +49,19 @@ API'et er deployed og tilgængeligt på:
 
 ### System Endpoints
 
-| Endpoint        | Method   | Beskrivelse                          | Kræver Auth |
-| --------------- | -------- | ------------------------------------ | ----------- |
-| `/`             | GET      | Forside med app info og links        | Nej         |
-| `/health`       | GET      | Basis health check                   | Nej         |
-| `/health/live`  | GET/HEAD | Liveness probe                       | Nej         |
-| `/health/ready` | GET/HEAD | Readiness probe                      | Nej         |
-| `/version`      | GET      | API version                          | Nej         |
-| `/appname`      | GET      | Applikationsnavn (text/plain)        | Nej         |
-| `/appinfo`      | GET      | Komplet app info (JSON)              | Nej         |
-| `/config`       | GET      | Runtime-konfiguration                | Nej         |
-| `/test`         | GET      | Echo test endpoint                   | Nej         |
-| `/test/error`   | GET      | Test fejlhåndtering (Problem Details)| Nej         |
-| `/swagger`      | GET      | API-dokumentation                    | Nej         |
+| Endpoint        | Method   | Beskrivelse                           | Kræver Auth |
+| --------------- | -------- | ------------------------------------- | ----------- |
+| `/`             | GET      | Forside med app info og links         | Nej         |
+| `/health`       | GET      | Basis health check                    | Nej         |
+| `/health/live`  | GET/HEAD | Liveness probe                        | Nej         |
+| `/health/ready` | GET/HEAD | Readiness probe                       | Nej         |
+| `/version`      | GET      | API version                           | Nej         |
+| `/appname`      | GET      | Applikationsnavn (text/plain)         | Nej         |
+| `/appinfo`      | GET      | Komplet app info (JSON)               | Nej         |
+| `/config`       | GET      | Runtime-konfiguration                 | Nej         |
+| `/test`         | GET      | Echo test endpoint                    | Nej         |
+| `/test/error`   | GET      | Test fejlhåndtering (Problem Details) | Nej         |
+| `/swagger`      | GET      | API-dokumentation                     | Nej         |
 
 ### Autentificerings-Endpoints
 

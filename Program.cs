@@ -138,19 +138,19 @@ try
             {
                 return Serilog.Events.LogEventLevel.Debug;
             }
-            
+
             // Log errors as Error
             if (ex != null || httpContext.Response.StatusCode > 499)
             {
                 return Serilog.Events.LogEventLevel.Error;
             }
-            
+
             // Log client errors (4xx) as Warning
             if (httpContext.Response.StatusCode > 399)
             {
                 return Serilog.Events.LogEventLevel.Warning;
             }
-            
+
             // Default: Information
             return Serilog.Events.LogEventLevel.Information;
         };

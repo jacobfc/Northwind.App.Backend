@@ -198,7 +198,7 @@ public class AuthController : ControllerBase
         try
         {
             var secret = _configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
-            
+
             // Validate secret length
             if (secret.Length < 32)
             {
