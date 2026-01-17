@@ -109,6 +109,7 @@ public class AuthController : ControllerBase
         var user = _users.FirstOrDefault(u => u.Username == tokenInfo.Username);
         if (user == null)
         {
+            _logger.LogWarning("User {Username} not found during token refresh", tokenInfo.Username);
             _refreshTokens.Remove(request.RefreshToken);
             return Unauthorized(new ProblemDetails
             {
@@ -194,31 +195,47 @@ public class AuthController : ControllerBase
 
     private string GenerateAccessToken(DemoUser user)
     {
-        var secret = _configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
-        var issuer = _configuration["Jwt:Issuer"] ?? "Northwind.App.Backend";
-        var audience = _configuration["Jwt:Audience"] ?? "Northwind.App.Frontend";
-        var expirationMinutes = _configuration.GetValue<int>("Jwt:AccessTokenExpirationMinutes", 60);
-
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
+        try
         {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role),
-            new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+            var secret = _configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+            
+            // Validate secret length
+            if (secret.Length < 32)
+            {
+                _logger.LogError("JWT Secret is too short ({Length} chars). Minimum 32 characters required.", secret.Length);
+                throw new InvalidOperationException("JWT Secret must be at least 32 characters long");
+            }
 
-        var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
-            signingCredentials: credentials
-        );
+            var issuer = _configuration["Jwt:Issuer"] ?? "Northwind.App.Backend";
+            var audience = _configuration["Jwt:Audience"] ?? "Northwind.App.Frontend";
+            var expirationMinutes = _configuration.GetValue<int>("Jwt:AccessTokenExpirationMinutes", 60);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate access token for user {Username}", user.Username);
+            throw;
+        }
     }
 
     private static string GenerateRefreshToken()

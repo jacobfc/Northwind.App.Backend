@@ -8,10 +8,12 @@ En moderne ASP.NET Core REST API backend-applikation, der fungerer som en demo o
 - ✅ **JWT-autentificering** - Sikre endpoints med access- og refresh-tokens
 - ✅ **Entity Framework Core** - SQLite-database med code-first tilgang
 - ✅ **OpenAPI/Swagger** - Interaktiv API-dokumentation
-- ✅ **Struktureret Logging** - Serilog med konsol-output til containers
+- ✅ **Struktureret Logging** - Serilog med smart filtrering (health checks logges på Debug niveau)
+- ✅ **Environment Variables** - Fuld understøttelse af .env filer med DotNetEnv
+- ✅ **Version Management** - Dynamisk app name og version fra assembly metadata
 - ✅ **Health Checks** - Kubernetes-klar liveness og readiness probes
 - ✅ **Problem Details (RFC 7807)** - Konsistente fejlsvar
-- ✅ **Docker-understøttelse** - Multi-stage build med sikkerhedsbedste praksis
+- ✅ **Docker-understøttelse** - Multi-stage build med sikkerhedsbedste praksis og healthcheck
 - ✅ **Cloud Ready** - Deployed på Render.com med automatiske deployments
 
 ## 🚀 Live Demo
@@ -28,6 +30,7 @@ API'et er deployed og tilgængeligt på:
 - **Swagger UI**: [https://northwind-backend-b088.onrender.com/swagger](https://northwind-backend-b088.onrender.com/swagger)
 - **Health Check**: [https://northwind-backend-b088.onrender.com/health/live](https://northwind-backend-b088.onrender.com/health/live)
 - **API Version**: [https://northwind-backend-b088.onrender.com/version](https://northwind-backend-b088.onrender.com/version)
+- **App Info**: [https://northwind-backend-b088.onrender.com/appinfo](https://northwind-backend-b088.onrender.com/appinfo)
 
 ## 🛠️ Teknologi Stack
 
@@ -46,17 +49,19 @@ API'et er deployed og tilgængeligt på:
 
 ### System Endpoints
 
-| Endpoint        | Method   | Beskrivelse                | Kræver Auth |
-| --------------- | -------- | -------------------------- | ----------- |
-| `/`             | GET      | Omdirigerer til Swagger UI | Nej         |
-| `/health`       | GET      | Basis health check         | Nej         |
-| `/health/live`  | GET/HEAD | Liveness probe             | Nej         |
-| `/health/ready` | GET/HEAD | Readiness probe            | Nej         |
-| `/version`      | GET      | API version                | Nej         |
-| `/config`       | GET      | Runtime-konfiguration      | Nej         |
-| `/test`         | GET      | Echo test endpoint         | Nej         |
-| `/test/error`   | GET      | Test fejlhåndtering        | Nej         |
-| `/swagger`      | GET      | API-dokumentation          | Nej         |
+| Endpoint        | Method   | Beskrivelse                          | Kræver Auth |
+| --------------- | -------- | ------------------------------------ | ----------- |
+| `/`             | GET      | Forside med app info og links        | Nej         |
+| `/health`       | GET      | Basis health check                   | Nej         |
+| `/health/live`  | GET/HEAD | Liveness probe                       | Nej         |
+| `/health/ready` | GET/HEAD | Readiness probe                      | Nej         |
+| `/version`      | GET      | API version                          | Nej         |
+| `/appname`      | GET      | Applikationsnavn (text/plain)        | Nej         |
+| `/appinfo`      | GET      | Komplet app info (JSON)              | Nej         |
+| `/config`       | GET      | Runtime-konfiguration                | Nej         |
+| `/test`         | GET      | Echo test endpoint                   | Nej         |
+| `/test/error`   | GET      | Test fejlhåndtering (Problem Details)| Nej         |
+| `/swagger`      | GET      | API-dokumentation                    | Nej         |
 
 ### Autentificerings-Endpoints
 
@@ -124,14 +129,22 @@ or
    dotnet restore
    ```
 
-3. **Kør applikationen**
+3. **(Valgfrit) Opret .env fil til lokal udvikling**
+   ```bash
+   cp .env.example .env
+   ```
+   Rediger `.env` og tilpas værdier efter behov. Filen ignoreres af Git.
+
+4. **Kør applikationen**
    ```bash
    dotnet run
+   # eller med hot reload:
+   dotnet watch
    ```
 
-4. **Åbn Swagger UI**
+5. **Åbn Swagger UI**
    
-   Naviger til: [http://localhost:5000/swagger](http://localhost:5000/swagger)
+   Naviger til: [http://localhost:5033/swagger](http://localhost:5033/swagger)
 
 ### Test API'et
 
@@ -241,14 +254,60 @@ Den gratis tier inkluderer:
 
 ## ⚙️ Konfiguration
 
-Konfiguration håndteres gennem `appsettings.json` og miljøvariabler.
+Konfiguration håndteres gennem en hierarkisk struktur:
+1. **appsettings.json** - Default værdier (committed til Git)
+2. **.env fil** - Lokal udvikling overrides (ignoreret af Git)
+3. **Environment variables** - Produktion og Docker (højeste prioritet)
+
+### Konfigurationshierarki
+
+Værdier fra senere kilder overskriver tidligere:
+
+```
+appsettings.json → .env fil → Environment Variables → Kommandolinje-argumenter
+```
+
+### .env Fil Support
+
+Projektet bruger [DotNetEnv](https://github.com/tonerdo/dotnet-env) til at indlæse `.env` filer ved opstart.
+
+**Lokal udvikling:**
+```bash
+# Kopier example fil
+cp .env.example .env
+
+# Rediger .env med dine lokale værdier
+nano .env
+```
+
+**Eksempel .env fil:**
+```bash
+# JWT Configuration - overrides appsettings.json
+Jwt__Secret=my-local-development-secret-key-min-32-chars
+Jwt__AccessTokenExpirationMinutes=120
+Jwt__RefreshTokenExpirationDays=14
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://localhost:5033
+
+# Logging Level (optional)
+# Serilog__MinimumLevel__Default=Debug
+```
+
+**Docker med docker-compose.yml:**
+```bash
+# Start med .env fil
+docker-compose up
+```
 
 ### JWT Indstillinger
 
+**Default i appsettings.json:**
 ```json
 {
   "Jwt": {
-    "Secret": "YourSecretKeyHere",
+    "Secret": "default-docker-secret-change-in-production-min-32-chars-long!",
     "Issuer": "Northwind.App.Backend",
     "Audience": "Northwind.App.Frontend",
     "AccessTokenExpirationMinutes": 60,
@@ -257,20 +316,44 @@ Konfiguration håndteres gennem `appsettings.json` og miljøvariabler.
 }
 ```
 
-### Miljøvariabler (til Produktion)
+### Miljøvariabler (Produktion på Render.com)
+
+**Tilføj i Render Dashboard under "Environment":**
 
 ```bash
-# JWT Konfiguration
-Jwt__Secret=your-production-secret-key
+# JWT Konfiguration (KRITISK - skift secret!)
+Jwt__Secret=your-strong-production-secret-min-32-chars-long!
 Jwt__Issuer=Northwind.App.Backend
 Jwt__Audience=Northwind.App.Frontend
 
 # ASP.NET Core
 ASPNETCORE_ENVIRONMENT=Production
-ASPNETCORE_URLS=http://+:8080
+
+# Logging (valgfri - reducer logs fra health checks)
+Serilog__MinimumLevel__Default=Information
 ```
 
-**⚠️ Sikkerhedsbemærkning:** Commit aldrig secrets til Git. Brug miljøvariabler eller secret management services i produktion.
+### Logging Konfiguration
+
+Applikationen bruger Serilog med smart request logging:
+
+- **Health check endpoints** (`/health`, `/health/live`, `/health/ready`) logges på `Debug` niveau
+- **Normale requests** logges på `Information` niveau
+- **4xx fejl** logges på `Warning` niveau  
+- **5xx fejl** logges på `Error` niveau
+
+**For at se Debug logs (f.eks. health checks):**
+```bash
+# I .env eller environment variable
+Serilog__MinimumLevel__Default=Debug
+```
+
+**⚠️ Sikkerhedsbemærkninger:**
+- ❌ Commit ALDRIG `.env` filer eller secrets til Git
+- ✅ Brug `.env.example` som template (uden sensitive data)
+- ✅ Skift altid JWT Secret i produktion
+- ✅ Brug minimum 32 tegn i JWT Secret
+- ✅ Brug environment variables på cloud platforms
 
 ## 📁 Projektstruktur
 
@@ -362,8 +445,11 @@ Dette projekt demonstrerer:
 - ✅ **CORS** - Konfigureret til cross-origin requests
 - ✅ **Docker** - Multi-stage builds, layer caching
 - ✅ **Cloud Native** - Container-klar, 12-factor app principper
+- ✅ **Environment Variables** - DotNetEnv for .env fil support
+- ✅ **Smart Logging** - Health check logs filtreres til Debug niveau
 - ✅ **Code Quality** - Meziantou.Analyzer for best practices enforcement
 - ✅ **Zero Warnings** - Docker build fejler ved compiler warnings (`--warnaserror`)
+- ✅ **Version Management** - Assembly metadata for app name og version
 
 ## 🤝 Bidrag
 

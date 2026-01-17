@@ -41,6 +41,7 @@ public class CustomersController : ControllerBase
 
         var customers = await _db.Customers
             .AsNoTracking()
+            .OrderBy(c => c.CustomerId)
             .Skip(skip)
             .Take(take)
             .ToListAsync();
@@ -174,19 +175,40 @@ public class CustomersController : ControllerBase
     {
         _logger.LogInformation("Creating new customer: {CustomerName} (public)", customer.CustomerName);
 
-        // Ensure ID is not set by client
-        customer.CustomerId = 0;
-        customer.Orders = new List<Order>();
+        try
+        {
+            // Ensure ID is not set by client
+            customer.CustomerId = 0;
+            customer.Orders = new List<Order>();
 
-        _db.Customers.Add(customer);
-        await _db.SaveChangesAsync();
+            _db.Customers.Add(customer);
+            await _db.SaveChangesAsync();
 
-        _logger.LogInformation("Created customer {CustomerId}", customer.CustomerId);
+            _logger.LogInformation("Created customer {CustomerId}", customer.CustomerId);
 
-        return CreatedAtAction(
-            nameof(GetByIdPublic),
-            new { id = customer.CustomerId },
-            customer);
+            return CreatedAtAction(
+                nameof(GetByIdPublic),
+                new { id = customer.CustomerId },
+                customer);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database error creating customer {CustomerName}", customer.CustomerName);
+            return Problem(
+                title: "Database error",
+                detail: "An error occurred while creating the customer. Please check the data and try again.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error creating customer {CustomerName}", customer.CustomerName);
+            return Problem(
+                title: "Server error",
+                detail: "An unexpected error occurred while creating the customer.",
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
     }
 
     /// <summary>
@@ -202,31 +224,61 @@ public class CustomersController : ControllerBase
     {
         _logger.LogInformation("Updating customer {CustomerId} (public)", id);
 
-        var customer = await _db.Customers.FindAsync(id);
-
-        if (customer == null)
+        try
         {
-            _logger.LogWarning("Customer {CustomerId} not found for update", id);
-            return NotFound(new ProblemDetails
+            var customer = await _db.Customers.FindAsync(id);
+
+            if (customer == null)
             {
-                Title = "Customer not found",
-                Detail = $"Customer with ID {id} was not found",
-                Status = StatusCodes.Status404NotFound
-            });
+                _logger.LogWarning("Customer {CustomerId} not found for update", id);
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Customer not found",
+                    Detail = $"Customer with ID {id} was not found",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            customer.CustomerName = input.CustomerName;
+            customer.ContactName = input.ContactName;
+            customer.Address = input.Address;
+            customer.City = input.City;
+            customer.PostalCode = input.PostalCode;
+            customer.Country = input.Country;
+
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Updated customer {CustomerId}", id);
+
+            return Ok(customer);
         }
-
-        customer.CustomerName = input.CustomerName;
-        customer.ContactName = input.ContactName;
-        customer.Address = input.Address;
-        customer.City = input.City;
-        customer.PostalCode = input.PostalCode;
-        customer.Country = input.Country;
-
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("Updated customer {CustomerId}", id);
-
-        return Ok(customer);
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex, "Concurrency error updating customer {CustomerId}", id);
+            return Problem(
+                title: "Concurrency error",
+                detail: "The customer was modified by another user. Please refresh and try again.",
+                statusCode: StatusCodes.Status409Conflict
+            );
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database error updating customer {CustomerId}", id);
+            return Problem(
+                title: "Database error",
+                detail: "An error occurred while updating the customer. Please check the data and try again.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating customer {CustomerId}", id);
+            return Problem(
+                title: "Server error",
+                detail: "An unexpected error occurred while updating the customer.",
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
     }
 
     /// <summary>
@@ -242,32 +294,62 @@ public class CustomersController : ControllerBase
     {
         _logger.LogInformation("Patching customer {CustomerId} (public)", id);
 
-        var customer = await _db.Customers.FindAsync(id);
-
-        if (customer == null)
+        try
         {
-            _logger.LogWarning("Customer {CustomerId} not found for patch", id);
-            return NotFound(new ProblemDetails
+            var customer = await _db.Customers.FindAsync(id);
+
+            if (customer == null)
             {
-                Title = "Customer not found",
-                Detail = $"Customer with ID {id} was not found",
-                Status = StatusCodes.Status404NotFound
-            });
+                _logger.LogWarning("Customer {CustomerId} not found for patch", id);
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Customer not found",
+                    Detail = $"Customer with ID {id} was not found",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            // Only update properties that are provided (not null)
+            if (input.CustomerName != null) customer.CustomerName = input.CustomerName;
+            if (input.ContactName != null) customer.ContactName = input.ContactName;
+            if (input.Address != null) customer.Address = input.Address;
+            if (input.City != null) customer.City = input.City;
+            if (input.PostalCode != null) customer.PostalCode = input.PostalCode;
+            if (input.Country != null) customer.Country = input.Country;
+
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Patched customer {CustomerId}", id);
+
+            return Ok(customer);
         }
-
-        // Only update properties that are provided (not null)
-        if (input.CustomerName != null) customer.CustomerName = input.CustomerName;
-        if (input.ContactName != null) customer.ContactName = input.ContactName;
-        if (input.Address != null) customer.Address = input.Address;
-        if (input.City != null) customer.City = input.City;
-        if (input.PostalCode != null) customer.PostalCode = input.PostalCode;
-        if (input.Country != null) customer.Country = input.Country;
-
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("Patched customer {CustomerId}", id);
-
-        return Ok(customer);
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex, "Concurrency error patching customer {CustomerId}", id);
+            return Problem(
+                title: "Concurrency error",
+                detail: "The customer was modified by another user. Please refresh and try again.",
+                statusCode: StatusCodes.Status409Conflict
+            );
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database error patching customer {CustomerId}", id);
+            return Problem(
+                title: "Database error",
+                detail: "An error occurred while updating the customer. Please check the data and try again.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error patching customer {CustomerId}", id);
+            return Problem(
+                title: "Server error",
+                detail: "An unexpected error occurred while updating the customer.",
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
     }
 
     /// <summary>
@@ -282,25 +364,46 @@ public class CustomersController : ControllerBase
     {
         _logger.LogInformation("Deleting customer {CustomerId} (public)", id);
 
-        var customer = await _db.Customers.FindAsync(id);
-
-        if (customer == null)
+        try
         {
-            _logger.LogWarning("Customer {CustomerId} not found for deletion", id);
-            return NotFound(new ProblemDetails
+            var customer = await _db.Customers.FindAsync(id);
+
+            if (customer == null)
             {
-                Title = "Customer not found",
-                Detail = $"Customer with ID {id} was not found",
-                Status = StatusCodes.Status404NotFound
-            });
+                _logger.LogWarning("Customer {CustomerId} not found for deletion", id);
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Customer not found",
+                    Detail = $"Customer with ID {id} was not found",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            _db.Customers.Remove(customer);
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Deleted customer {CustomerId}", id);
+
+            return NoContent();
         }
-
-        _db.Customers.Remove(customer);
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("Deleted customer {CustomerId}", id);
-
-        return NoContent();
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database error deleting customer {CustomerId} - may have related records", id);
+            return Problem(
+                title: "Database error",
+                detail: "Cannot delete customer. The customer may have related orders or other data.",
+                statusCode: StatusCodes.Status409Conflict
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error deleting customer {CustomerId}", id);
+            return Problem(
+                title: "Server error",
+                detail: "An unexpected error occurred while deleting the customer.",
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
     }
 
     // ============================================
@@ -325,6 +428,7 @@ public class CustomersController : ControllerBase
 
         var customers = await _db.Customers
             .AsNoTracking()
+            .OrderBy(c => c.CustomerId)
             .Skip(skip)
             .Take(take)
             .ToListAsync();

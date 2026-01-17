@@ -128,8 +128,33 @@ try
     // Response compression
     app.UseResponseCompression();
 
-    // Serilog request logging - logs all HTTP requests
-    app.UseSerilogRequestLogging();
+    // Serilog request logging - logs all HTTP requests except health checks
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.GetLevel = (httpContext, elapsed, ex) =>
+        {
+            // Reduce health check logging to Debug level
+            if (httpContext.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase))
+            {
+                return Serilog.Events.LogEventLevel.Debug;
+            }
+            
+            // Log errors as Error
+            if (ex != null || httpContext.Response.StatusCode > 499)
+            {
+                return Serilog.Events.LogEventLevel.Error;
+            }
+            
+            // Log client errors (4xx) as Warning
+            if (httpContext.Response.StatusCode > 399)
+            {
+                return Serilog.Events.LogEventLevel.Warning;
+            }
+            
+            // Default: Information
+            return Serilog.Events.LogEventLevel.Information;
+        };
+    });
 
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -312,7 +337,8 @@ try
         """;
 
         return Results.Content(html, "text/html");
-    });
+    })
+    .ExcludeFromDescription();
 
     Log.Information("Northwind.App.Backend starting...");
 

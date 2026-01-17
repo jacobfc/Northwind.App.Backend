@@ -78,17 +78,6 @@ public class SystemController : ControllerBase
         return Content(text ?? "", "text/plain");
     }
 
-    [HttpGet("test2")]
-    [ProducesResponseType(typeof(string), 200)]
-    [ProducesResponseType(500)]
-    [ProducesResponseType(400)]
-    [Produces("text/plain")]
-    public IActionResult Test2(string? text)
-    {
-        _logger.LogInformation("GET /test: {Text}", text);
-        return Content(text!.ToUpper() ?? "", "text/plain");
-    }
-
     /// <summary>
     /// Test endpoint that throws an exception - to demonstrate Problem Details
     /// </summary>
