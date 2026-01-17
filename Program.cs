@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -132,15 +133,20 @@ try
     // Health check endpoints
     app.MapHealthChecks("/health");
 
-    // Root endpoint - API information page
-    app.MapGet("/", () => Results.Content(
-        """
+    // Root endpoint - API information page (reads app name from assembly metadata)
+    app.MapGet("/", () =>
+    {
+        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var productName = assembly.GetCustomAttribute<System.Reflection.AssemblyProductAttribute>()?.Product ?? "Northwind API Backend";
+        var version = assembly.GetName().Version?.ToString() ?? "0.0.0";
+
+        var html = $$"""
         <!DOCTYPE html>
-        <html lang="da">
+        <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Northwind API Backend</title>
+            <title>{{productName}}</title>
             <style>
                 body {
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -160,29 +166,44 @@ try
                 .links { margin-top: 20px; }
                 .links a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 16px; background: #0078d4; color: white; text-decoration: none; border-radius: 4px; }
                 .links a:hover { background: #106ebe; }
+                .version { color: #666; font-size: 0.9em; margin-top: 10px; }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🚀 Northwind API Backend</h1>
-                <p>Dette er en <strong>REST API backend</strong> applikation bygget med ASP.NET Core.</p>
+                <h1>🚀 {{productName}}</h1>
+                <p class="version">Version {{version}}</p>
+                <p>This is a <strong>REST API backend</strong> application built with ASP.NET Core.</p>
                 
                 <div class="info">
                     <p><strong>ℹ️ Information:</strong></p>
-                    <p>Dette er en demo/test API der demonstrerer moderne web API best practices inkl. JWT-autentificering, Entity Framework Core, og OpenAPI-dokumentation.</p>
+                    <p>This is a demo/test API demonstrating modern web API best practices including JWT authentication, Entity Framework Core, and OpenAPI documentation.</p>
                 </div>
 
                 <div class="links">
-                    <a href="/swagger">📖 API Dokumentation (Swagger)</a>
+                    <a href="/swagger">📖 API Documentation (Swagger)</a>
                     <a href="/health/live">✅ Health Check</a>
                     <a href="/version">📋 Version</a>
+                    <a href="/appname">📛 App Name</a>
+                    <a href="/appinfo">ℹ️ App Info</a>
                 </div>
             </div>
         </body>
         </html>
-        """, "text/html"));
+        """;
+
+        return Results.Content(html, "text/html");
+    });
 
     Log.Information("Northwind.App.Backend starting...");
+
+    // Log local URL in Development mode
+    if (app.Environment.IsDevelopment())
+    {
+        var urls = app.Configuration["ASPNETCORE_URLS"] ?? app.Configuration["urls"] ?? "http://localhost:5000";
+        Log.Information("Running in Development mode - Local URL: {Urls}", urls);
+    }
+
     app.Run();
 }
 catch (Exception ex)

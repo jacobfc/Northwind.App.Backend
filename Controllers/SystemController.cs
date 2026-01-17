@@ -135,4 +135,47 @@ public class SystemController : ControllerBase
         return Ok(info);
     }
 
+    /// <summary>
+    /// Get the application name
+    /// </summary>
+    [HttpGet("appname")]
+    [ProducesResponseType(typeof(string), 200)]
+    [ProducesResponseType(500)]
+    [Produces("text/plain")]
+    public IActionResult AppName()
+    {
+        _logger.LogDebug("GET /appname");
+        var productName = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? "Unknown";
+        return Content(productName, "text/plain");
+    }
+
+    /// <summary>
+    /// Get comprehensive application information including name, version, and environment
+    /// </summary>
+    [HttpGet("appinfo")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(500)]
+    [Produces("application/json")]
+    public IActionResult AppInfo()
+    {
+        _logger.LogDebug("GET /appinfo");
+
+        var assembly = Assembly.GetExecutingAssembly();
+        var assemblyName = assembly.GetName();
+
+        var info = new
+        {
+            Name = assemblyName.Name ?? "Unknown",
+            Version = assemblyName.Version?.ToString() ?? "Unknown",
+            Product = assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? "Unknown",
+            FileVersion = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "Unknown",
+            InformationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unknown",
+            Environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "Unknown",
+            Framework = assembly.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?.FrameworkName ?? "Unknown"
+        };
+
+        return Ok(info);
+    }
+
 }
