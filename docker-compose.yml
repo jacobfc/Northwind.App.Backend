@@ -9,7 +9,7 @@ services:
     ports:
       - "5033:5033"
     environment:
-      - PORT=5033
+      - ASPNETCORE_URLS=http://+:5033
       - ASPNETCORE_ENVIRONMENT=Development
     env_file:
       - .env  # Optional: Load environment variables from .env file if it exists
