@@ -177,17 +177,70 @@ curl http://localhost:5000/api/customers \
 
 ## 🐳 Docker
 
-### Byg Docker Image
+### Option 1: Brug Pre-built Image fra GitHub Container Registry (Anbefalet)
+
+Dette projekt publicerer automatisk Docker images til GitHub Container Registry ved hver commit til `main` branch.
+
+**Hurtigt kom i gang:**
 ```bash
+# Pull latest image
+docker pull ghcr.io/devcronberg/northwind.app.backend:latest
+
+# Kør container
+docker run -d --name northwind-api -p 5033:5033 -e ASPNETCORE_URLS=http://+:5033 ghcr.io/devcronberg/northwind.app.backend:latest
+
+# Tilgå API'et på http://localhost:5033
+# Swagger dokumentation: http://localhost:5033/swagger
+```
+
+**Med Docker Compose (anbefalet til udvikling):**
+
+Opret en `docker-compose.yml` fil:
+```yaml
+services:
+  northwind-api:
+    image: ghcr.io/devcronberg/northwind.app.backend:latest
+    container_name: northwind-backend
+    ports:
+      - "5033:5033"
+    environment:
+      - ASPNETCORE_URLS=http://+:5033
+      - ASPNETCORE_ENVIRONMENT=Production
+    restart: unless-stopped
+```
+
+Start med:
+```bash
+docker compose up -d
+```
+
+**Tilgængelige image tags:**
+- `latest` - Nyeste version fra main branch
+- `0.9.0` - Specifik version (fra .csproj Version tag)
+- `main-sha-abc123` - Commit-specific version
+
+### Option 2: Byg Docker Image Selv
+
+**Fra source code:**
+```bash
+# Klon repository
+git clone https://github.com/devcronberg/Northwind.App.Backend.git
+cd Northwind.App.Backend
+
+# Byg image
 docker build -t northwind-backend .
+
+# Kør container
+docker run -d --name northwind-api \
+  -p 5033:5033 \
+  -e ASPNETCORE_URLS=http://+:5033 \
+  northwind-backend
 ```
 
-### Kør Container
+**Eller brug Docker Compose (inkluderet i repository):**
 ```bash
-docker run -p 8080:8080 northwind-backend
+docker compose up -d --build
 ```
-
-API'et vil være tilgængeligt på [http://localhost:8080](http://localhost:8080)
 
 ### Docker Image Detaljer
 
@@ -198,6 +251,36 @@ API'et vil være tilgængeligt på [http://localhost:8080](http://localhost:8080
   - Build: `mcr.microsoft.com/dotnet/sdk:10.0`
   - Runtime: `mcr.microsoft.com/dotnet/aspnet:10.0`
 - **Build kvalitet** - Bruger `--warnaserror` flag, så deployment fejler hvis der er warnings
+- **Health Check** - Built-in healthcheck via `/health/live` endpoint
+- **Automatisk publicering** - GitHub Actions bygger og pusher til GHCR ved hver commit
+
+### Nyttige Docker Kommandoer
+
+```bash
+# Se kørende containers
+docker ps
+
+# Se logs
+docker logs northwind-api
+
+# Se logs live
+docker logs -f northwind-api
+
+# Stop container
+docker stop northwind-api
+
+# Start container igen
+docker start northwind-api
+
+# Fjern container
+docker rm northwind-api
+
+# Pull nyeste version
+docker pull ghcr.io/devcronberg/northwind.app.backend:latest
+
+# Opdater til nyeste version
+docker compose pull && docker compose up -d
+```
 
 ## ☁️ Deployment til Render.com
 
@@ -376,10 +459,49 @@ Northwind.App.Backend/
 ├── Program.cs                        # Applikations entry point
 ├── appsettings.json                  # Konfiguration
 ├── Dockerfile                        # Docker build konfiguration
+├── docker-compose.yml                # Lokal Docker Compose setup
 ├── .dockerignore                     # Docker ekskluderinger
 ├── render.yaml                       # Render.com deployment config
 └── .github/
+    ├── workflows/
+    │   └── docker-publish.yml        # GitHub Actions workflow
     └── copilot-instructions.md       # AI assistent instruktioner
+```
+
+## 🤖 Continuous Integration (CI/CD)
+
+Projektet bruger **GitHub Actions** til automatisk build og publicering af Docker images.
+
+### Automatisk Docker Image Publishing
+
+Ved hver push til `main` branch:
+1. GitHub Actions builder Docker imaget
+2. Imaget pushes til GitHub Container Registry (GHCR)
+3. Tilgængeligt på: `ghcr.io/devcronberg/northwind.app.backend`
+
+**Tags der oprettes automatisk:**
+- `latest` - Nyeste version
+- `0.9.0` - Version fra .csproj
+- `main-sha-abc123` - Git commit SHA
+
+### GitHub Actions Workflow
+
+Workflowet [.github/workflows/docker-publish.yml](.github/workflows/docker-publish.yml):
+- ✅ Bygger Docker image med multi-stage build
+- ✅ Ekstraerer version fra .csproj automatisk
+- ✅ Tagger imaget med version, latest og commit SHA
+- ✅ Pusher til GitHub Container Registry
+- ✅ Fejler hvis der er compiler warnings (`--warnaserror`)
+
+**Se build status:**
+- Actions tab: [https://github.com/devcronberg/Northwind.App.Backend/actions](https://github.com/devcronberg/Northwind.App.Backend/actions)
+- Package: [https://github.com/devcronberg/Northwind.App.Backend/pkgs/container/northwind.app.backend](https://github.com/devcronberg/Northwind.App.Backend/pkgs/container/northwind.app.backend)
+
+**Manuelt trigger workflow:**
+```bash
+# Via GitHub web interface: Actions → Build and Push Docker Image → Run workflow
+# Eller via GitHub CLI:
+gh workflow run docker-publish.yml
 ```
 
 ## 🔐 Autentificering
@@ -450,6 +572,8 @@ Dette projekt demonstrerer:
 - ✅ **Code Quality** - Meziantou.Analyzer for best practices enforcement
 - ✅ **Zero Warnings** - Docker build fejler ved compiler warnings (`--warnaserror`)
 - ✅ **Version Management** - Assembly metadata for app name og version
+- ✅ **CI/CD** - GitHub Actions automatisk Docker image publishing
+- ✅ **Container Registry** - Automatisk publicering til GitHub Container Registry
 
 ## 🤝 Bidrag
 
