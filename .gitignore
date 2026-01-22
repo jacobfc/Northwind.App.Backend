@@ -18,12 +18,6 @@ packages-microsoft-prod.deb
 # User-specific files (Mono Auto Generated)
 mono_crash.*
 
-# User-specific files (VSCode)
-.vscode/*
-
-# User-specific files (VSCode)
-.vscode/*
-
 # Mono Auto Generated Files
 mono_crash.*
 
