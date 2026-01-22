@@ -51,8 +51,7 @@ This is an ASP.NET Core REST API backend application serving as a demo/reference
 ├── Controllers/                     # API controllers
 │   ├── SystemController.cs          # Health, version, config endpoints
 │   ├── AuthController.cs            # JWT authentication (login, refresh, logout)
-│   ├── CustomersController.cs       # Protected customer endpoints
-│   └── PublicCustomersController.cs # Public customer endpoints
+│   └── CustomersController.cs       # All customer endpoints (public + protected)
 ├── Models/
 │   ├── EF/                          # Entity Framework models
 │   │   ├── NorthwindContext.cs      # DbContext for Northwind database
@@ -60,12 +59,18 @@ This is an ASP.NET Core REST API backend application serving as a demo/reference
 │   │   ├── Order.cs                 # Order entity
 │   │   ├── Product.cs               # Product entity
 │   │   └── [other entities...]
-│   └── MVC/                         # Controllers in wrong folder (legacy)
+│   ├── CustomerWithOrdersResponse.cs    # Response model for customer with orders
+│   └── CustomerWithRevenueResponse.cs   # Response model for customer with revenue
 ├── Assets/
 │   └── Northwind.db                 # SQLite database file
+├── Properties/
+│   └── launchSettings.json          # Development launch profiles (ports 5033/7073)
 ├── Program.cs                       # Application entry point & configuration
 ├── appsettings.json                 # Configuration (Serilog, JWT, ConnectionStrings)
 ├── .env.example                     # Template for .env file (committed to Git)
+├── .editorconfig                    # EditorConfig with Meziantou.Analyzer rules
+├── example.http                     # REST Client examples for testing API
+├── example.auth.http                # REST Client examples with authentication
 ├── docker-compose.yml               # Docker Compose configuration
 ├── Dockerfile                       # Multi-stage Docker build configuration
 ├── .dockerignore                    # Docker build exclusions
@@ -107,11 +112,13 @@ This is an ASP.NET Core REST API backend application serving as a demo/reference
 #### Public Customer Endpoints (No Authentication)
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/public/customers` | Get all customers |
+| `GET /api/public/customers` | Get all customers (paginated: skip, take) |
+| `GET /api/public/customers-with-revenue` | Get all customers with order count and revenue (sorted by revenue desc) |
 | `GET /api/public/customers/{id}` | Get customer by ID |
-| `GET /api/public/customers/{id}/orders` | Get customer with orders |
+| `GET /api/public/customers/{id}/orders` | Get customer with orders (maxOrders parameter) |
 | `POST /api/public/customers` | Create new customer |
 | `PUT /api/public/customers/{id}` | Update customer |
+| `PATCH /api/public/customers/{id}` | Partially update customer |
 | `DELETE /api/public/customers/{id}` | Delete customer |
 
 #### Protected Customer Endpoints (Requires Authentication)
@@ -239,6 +246,78 @@ policy.AllowAnyOrigin()
 
 **Note**: In production, restrict to specific origins.
 
+### Development Workflows
+
+#### Running the Application
+
+**Local Development (dotnet CLI):**
+```bash
+# Run with hot reload (port 5033/7073)
+dotnet run
+
+# Or use watch mode for auto-restart on file changes
+dotnet watch run
+```
+
+**Docker Compose (recommended for testing):**
+```bash
+# Build and run container
+docker-compose up --build
+
+# Access at http://localhost:5033
+# Logs from container will show in terminal
+```
+
+**Docker directly:**
+```bash
+# Build image
+docker build -t northwind-backend .
+
+# Run container (port 8080 by default)
+docker run -p 5033:8080 northwind-backend
+
+# Override JWT secret via environment variable
+docker run -p 5033:8080 -e Jwt__Secret="your-secret-min-32-chars" northwind-backend
+```
+
+#### Testing the API
+
+Use the included `.http` files with [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client):
+
+- **example.http** - All public endpoints and system endpoints
+- **example.auth.http** - Authentication flow and protected endpoints
+
+Or use Swagger UI at `/swagger` for interactive testing.
+
+#### VS Code Tasks
+
+Available tasks in `.vscode/tasks.json`:
+- `build` - Build the project
+- `publish` - Publish release version
+- `watch` - Run with hot reload
+
+Run tasks via: `Terminal > Run Task...` or `Ctrl+Shift+B` (build)
+
+#### Common Commands
+
+```bash
+# Restore dependencies
+dotnet restore
+
+# Build project
+dotnet build
+
+# Build with zero warnings enforcement (like Docker)
+dotnet build --warnaserror
+
+# Run EF Core migrations (if you modify database schema)
+dotnet ef migrations add MigrationName
+dotnet ef database update
+
+# Generate TypeScript types from DB (if needed)
+dotnet ef dbcontext scaffold
+```
+
 ## When Modifying This Project
 
 1. **Keep all text in English** - code, comments, logs, documentation
@@ -249,7 +328,7 @@ policy.AllowAnyOrigin()
 6. **Follow existing patterns**:
    - SystemController for system endpoints
    - AuthController for authentication
-   - CustomersController for authenticated endpoints
+   - CustomersController contains both public (`/api/public/customers`) and protected (`/api/customers`) endpoints
 7. **Use `AsNoTracking()`** for read-only EF queries
 8. **Use `[Authorize]`** attribute for protected endpoints
 9. **Environment variables**: Use `.env.example` as template, never commit `.env`

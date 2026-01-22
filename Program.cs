@@ -46,7 +46,16 @@ try
 
     // Entity Framework - SQLite database (read-only in container)
     builder.Services.AddDbContext<NorthwindContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString("NorthwindDb")));
+    {
+        options.UseSqlite(builder.Configuration.GetConnectionString("NorthwindDb"));
+        // Enable sensitive data logging in development (shows parameter values)
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableSensitiveDataLogging();
+        }
+        // Enable detailed errors for EF Core
+        options.EnableDetailedErrors();
+    });
 
     // JWT Authentication
     var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
